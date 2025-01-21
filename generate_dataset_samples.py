@@ -2,28 +2,16 @@ import numpy as np
 import pandas as pd
 
 # Função para gerar o dataset
-def generate_dataset(equation_type, noise_level=0.1, num_points=100, output_file='quadratic.xlsx'):
-    """
-    Gera um dataset com dados de x, y e ruído baseado no tipo de equação especificada.
+def generate_dataset(equation_type, a, b, c, noise_level=0.1, num_points=100, output_file='quadratic.xlsx'):
 
-    Parameters:
-        equation_type (str): Tipo de equação ('linear', 'quadratic', 'sine', etc.)
-        noise_level (float): Nível de ruído a ser adicionado
-        num_points (int): Número de pontos no dataset
-        output_file (str): Nome do arquivo de saída em Excel
-    """
     x = np.linspace(0, 10, num_points)
 
     if equation_type == 'linear':
-        y = 2 * x + 1
+        y = a * x + b
     elif equation_type == 'quadratic':
-        y = x**2 - 5 * x + 4
-    elif equation_type == 'sine':
-        y = np.sin(x + 2.0)
-    elif equation_type == 'exponential':
-        y = np.exp(0.3 * x)
-    else:
-        raise ValueError("Tipo de equação não suportado. Escolha entre 'linear', 'quadratic', 'sine', ou 'exponential'.")
+        y = a*x**2 +b*x + c
+    elif equation_type == 'power':
+        y = a**x + b
 
     # Adiciona ruído
     noise = np.random.normal(0, noise_level, size=num_points)
@@ -37,10 +25,14 @@ def generate_dataset(equation_type, noise_level=0.1, num_points=100, output_file
     print(f"Dataset gerado e salvo em '{output_file}'.")
 
 # Input do usuário
-equation_type = "sine"
+equation_type = "power"
 noise_level = 0.001
 num_points = 100
-output_file = "datasets/sine.xlsx"
+#a, b, c = -5.26, 2.58, 0.00           #linear
+#a, b, c = 2.22, -5.37, 3.22            #quadratic
+a, b, c = 3.1525, -7.15, 0.00            #power
+
+output_file = "datasets/power.xlsx"
 
 # Gera o dataset
-generate_dataset(equation_type, noise_level, num_points, output_file)
+generate_dataset(equation_type, a, b, c, noise_level, num_points, output_file)
