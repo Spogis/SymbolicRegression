@@ -1,4 +1,5 @@
 import os
+import shutil
 import glob
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -11,18 +12,32 @@ from pysr import PySRRegressor
 random.seed(42)
 np.random.seed(42)
 
-# 1. Load the dataset
+########################################################################################################################
+# Clean pySR Temp Dir
+########################################################################################################################
+temp_directory = "temp_pysr_files"
+if not os.path.exists(temp_directory):
+    os.makedirs(temp_directory)
+shutil.rmtree(temp_directory)
+
+########################################################################################################################
+# Load the dataset - Input Values
+########################################################################################################################
 data = pd.read_excel("datasets/quadratic.xlsx")
 
-# Limpeza dos nomes das colunas
+########################################################################################################################
+# Cleaning column names
+########################################################################################################################
 data.columns = (
     data.columns
-    .str.strip()  # Remove espaços extras no início e no final
-    .str.replace(r'[^a-zA-Z0-9_]', '', regex=True)  # Remove caracteres inválidos, mantendo letras, números e '_'
-    .str.replace(' ', '_')  # Substitui espaços por '_'
+    .str.strip()  # Remove extra spaces at the beginning and the end
+    .str.replace(r'[^a-zA-Z0-9_]', '', regex=True)  # Remove invalid characters, keeping letters, numbers, and '_'
+    .str.replace(' ', '_')  # Replace spaces with '_'
 )
 
-# 2. Define y (dependent variable) and X (independent variables)
+########################################################################################################################
+# Define y (dependent variable) and X (independent variables)
+########################################################################################################################
 y = data.iloc[:, 0].values  # The first column is always the dependent variable
 X = data.iloc[:, 1:].values  # The other columns are the independent variables
 
@@ -30,7 +45,9 @@ temp_directory = "temp_pysr_files"
 if not os.path.exists(temp_directory):
     os.makedirs(temp_directory)
 
-# 3. Configure the PySR model
+########################################################################################################################
+# Configure the PySR model
+########################################################################################################################
 model = PySRRegressor(
     populations=10,
     niterations=100,
@@ -50,11 +67,15 @@ model = PySRRegressor(
     warm_start=False,  # Não utilizar o modelo da rodada anterior
 )
 
-# 4. Fit the model to the data
+########################################################################################################################
+# Fit the Symbolic Regression model to the data
+########################################################################################################################
 print("Training the model...")
 model.fit(X, y)
 
-# 5. Get the best generated equation
+########################################################################################################################
+# Get the best generated equation
+########################################################################################################################
 best_equation_sympy = model.sympy()
 print("Generated equation:", best_equation_sympy)
 
@@ -77,12 +98,16 @@ else:
     print("Using the best generated equation:")
     print(best_equation_sympy)
 
-# 6. Simplify and rename variables in the equation
+########################################################################################################################
+# Simplify and rename variables in the equation
 # Variable names based on dataset columns
+########################################################################################################################
 variables = sp.symbols(data.columns[1:])  # The independent variables
 simplified_equation = sp.simplify(best_equation_sympy.subs(dict(zip(["x" + str(i) for i in range(len(variables))], variables))))
 
-# Generate LaTeX and display
+########################################################################################################################
+# Generate LaTeX Equation and display
+########################################################################################################################
 latex_expression = sp.latex(simplified_equation)
 independent_variables_name=data.columns[0]
 latex_equation = f"{independent_variables_name}={latex_expression}"
@@ -91,8 +116,9 @@ latex_equation = f"{independent_variables_name}={latex_expression}"
 print("Simplified equation with renamed variables:", simplified_equation)
 print("Simplified equation in LaTeX:", latex_equation)
 
-# 7. Save the simplified equation as an image
-# Create the figure with the adjusted size
+########################################################################################################################
+# Save the simplified equation as an image
+########################################################################################################################
 plt.figure(figsize=(12,5))
 plt.text(
     0.5,
@@ -106,29 +132,49 @@ plt.axis("off")
 plt.savefig("assets/BestEquation.png")
 plt.show()
 
-# 8. Generate predicted values
+########################################################################################################################
+# Generate predicted values
+########################################################################################################################
 y_pred = model.predict(X)
 
-# 9. Create a DataFrame with real and predicted values
 results_df = pd.DataFrame({
     "Real": y,
     "Predict": y_pred
 })
+
 r2 = r2_score(y, y_pred)
 print(f"r2 score= {r2}")
 
-# 10. Calculate absolute and relative error
 results_df["Absolute_Error"] = np.abs(results_df["Real"] - results_df["Predict"])
 results_df["Relative_Error_%"] = 100 * results_df["Absolute_Error"] / results_df["Real"]
 
-# 11. Save the DataFrame to an Excel file
 results_df.to_excel("datasets/Real_vs_Predict.xlsx", index=False)
 
-# 12. Display a preview of the DataFrame
+########################################################################################################################
+# Display a preview of the Real vs Predict DataFrame
+########################################################################################################################
 print(results_df.head())
 
-# 13. Generate the Python file with the function for the equation
-def generate_equation_file(equation, variables, independent_variable, valores_primeira_linha):
+########################################################################################################################
+# Plot Real vs Predicted Values
+########################################################################################################################
+plt.figure(figsize=(8, 6))
+plt.scatter(results_df['Real'], results_df['Predict'], alpha=0.6, label='Real vs Predict')
+plt.plot([results_df['Real'].min(), results_df['Real'].max()],
+         [results_df['Real'].min(), results_df['Real'].max()],
+         color='red', linestyle='--', label='Ideal Fit')
+plt.xlabel('Real')
+plt.ylabel('Predict')
+plt.title('Real vs Predict')
+plt.legend()
+plt.grid(True)
+plt.show()
+
+
+########################################################################################################################
+# Generate the Python file with the function for the equation
+########################################################################################################################
+def generate_equation_file(equation, variables, independent_variable, first_row_values):
     equation_str = sp.pycode(equation)
 
     # Create the Python file that will contain the function to calculate y
@@ -141,13 +187,14 @@ def generate_equation_file(equation, variables, independent_variable, valores_pr
 
         f.write('if __name__ == "__main__":\n')
         f.write('    # Test the function with example values\n')
-        f.write(f'    {", ".join([var for var in variables])} = {list(valores_primeira_linha)}  # Example values\n')
+        f.write(f'    {", ".join([var for var in variables])} = {list(first_row_values)}  # Example values\n')
         f.write(f'    result = calculate_{independent_variable}(' + ", ".join([var for var in variables]) + ')\n')
         f.write('    print(f"Result for input values: y = {result}")\n')
 
     print("File 'equation.py' generated successfully!")
 
-
-# Generate the file with the equation
-valores_primeira_linha = data.iloc[0, 1:].values
-generate_equation_file(simplified_equation, data.columns[1:], data.columns[0], valores_primeira_linha)
+########################################################################################################################
+# Generate the file with the equation - Example Values From First Dataset Line
+########################################################################################################################
+first_row_values = data.iloc[0, 1:].values
+generate_equation_file(simplified_equation, data.columns[1:], data.columns[0], first_row_values)

@@ -2,7 +2,7 @@ import sympy as sp
 import math
 
 def calculate_y(x):
-    y = 2.21966004397058*x**2 - 5.37115099850075*x + 3.22095213396296
+    y = 2.1994387*x**2 - 5.2970787319326*x + 3.16002384592155
     return float(y)
 
 if __name__ == "__main__":
