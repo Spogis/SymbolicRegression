@@ -1,6 +1,5 @@
 import os
 import shutil
-import glob
 import pandas as pd
 import matplotlib.pyplot as plt
 import sympy as sp
@@ -23,7 +22,7 @@ shutil.rmtree(temp_directory)
 ########################################################################################################################
 # Load the dataset - Input Values
 ########################################################################################################################
-data = pd.read_excel("datasets/quadratic.xlsx")
+data = pd.read_excel("datasets/nusselt.xlsx")
 
 ########################################################################################################################
 # Cleaning column names
@@ -54,7 +53,7 @@ model = PySRRegressor(
     unary_operators=["exp", "log", "sqrt"],  # Unary operators
     binary_operators=["+", "-", "*", "/", "^"],  # Binary operators
     early_stop_condition=(
-        "stop_if(loss, complexity) = loss < 1e-2 && complexity < 10"
+        "stop_if(loss, complexity) = loss < 1e-1 && complexity < 10"
         # Stop early if we find a good and simple equation
     ),
     elementwise_loss="myloss(x, y) = sum(abs.(x .- y) ./ abs.(x)) ",  # MAPE
@@ -62,7 +61,7 @@ model = PySRRegressor(
     temp_equation_file=True,
     tempdir=temp_directory,
     delete_tempfiles=False,
-    verbosity=1,  # Verbosity level
+    verbosity=2,  # Verbosity level
 
     warm_start=False,  # Não utilizar o modelo da rodada anterior
 )
@@ -130,7 +129,7 @@ plt.text(
 )
 plt.axis("off")
 plt.savefig("assets/BestEquation.png")
-plt.show()
+plt.close()
 
 ########################################################################################################################
 # Generate predicted values
@@ -163,13 +162,31 @@ plt.scatter(results_df['Real'], results_df['Predict'], alpha=0.6, label='Real vs
 plt.plot([results_df['Real'].min(), results_df['Real'].max()],
          [results_df['Real'].min(), results_df['Real'].max()],
          color='red', linestyle='--', label='Ideal Fit')
+
+x_min, x_max = plt.xlim()
+y_min, y_max = plt.ylim()
+
+x_pos = x_min + (x_max - x_min) * 0.5
+y_pos = y_min + (y_max - y_min) * 0.8
+
+plt.text(
+    x_pos,
+    y_pos,
+    f"${latex_equation}$",
+    fontsize=12,
+    ha="center",
+    va="center",
+    bbox=dict(facecolor='white', alpha=0.7, edgecolor='black', boxstyle='round,pad=0.3')
+)
+
 plt.xlabel('Real')
 plt.ylabel('Predict')
 plt.title('Real vs Predict')
 plt.legend()
 plt.grid(True)
+plt.savefig("assets/Fit.png")
 plt.show()
-
+plt.close()
 
 ########################################################################################################################
 # Generate the Python file with the function for the equation
@@ -187,9 +204,13 @@ def generate_equation_file(equation, variables, independent_variable, first_row_
 
         f.write('if __name__ == "__main__":\n')
         f.write('    # Test the function with example values\n')
-        f.write(f'    {", ".join([var for var in variables])} = {list(first_row_values)}  # Example values\n')
+        if len(first_row_values)>1:
+            f.write(f'    {", ".join([var for var in variables])} = {list(first_row_values)}  # Example values\n')
+        else:
+            f.write(f'    {", ".join([var for var in variables])} = {first_row_values[0]}  # Example values\n')
+
         f.write(f'    result = calculate_{independent_variable}(' + ", ".join([var for var in variables]) + ')\n')
-        f.write('    print(f"Result for input values: y = {result}")\n')
+        f.write('    print(f"'+ independent_variable +' = {result}")\n')
 
     print("File 'equation.py' generated successfully!")
 
