@@ -25,7 +25,7 @@ if not os.path.exists(temp_directory):
 ########################################################################################################################
 # Load the dataset - Input Values
 ########################################################################################################################
-data = pd.read_excel("datasets/quadratic.xlsx")
+data = pd.read_excel("datasets/linear.xlsx")
 
 ########################################################################################################################
 # Cleaning column names
@@ -58,7 +58,7 @@ model = PySRRegressor(
         "stop_if(loss, complexity) = loss < 1e-2 && complexity < 10"
         # Stop early if we find a good and simple equation
     ),
-    elementwise_loss="myloss(x, y) = sum(abs.(x .- y) ./ abs.(x)) ",  # MAPE
+    elementwise_loss="myloss(x, y) = sum(abs.(x .- y) ./ abs.(x)) ",  # MAPE - Mean Absolute Percentage Error
 
     temp_equation_file=True,
     tempdir=temp_directory,
