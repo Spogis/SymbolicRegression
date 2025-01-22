@@ -43,6 +43,12 @@ Join us for an **interactive live session** where we'll dive deep into PySR and 
 - **Scalability**: Handle large and complex datasets efficiently.
 - **Customizable Workflows**: Tailor the regression process to suit your needs.
 
+## References and Acknowledgments
+
+This project utilizes the outstanding **PySR** library, an open-source tool developed to advance symbolic regression research and applications. You can explore and contribute to PySR through its official repository: [PySR on GitHub](https://github.com/MilesCranmer/PySR).
+
+A special thanks to **Miles Cranmer** and all contributors of the PySR project for their dedication to creating and maintaining this incredible tool. Your work has significantly enhanced the field of interpretable machine learning and scientific discovery. 🙌
+
 ---
 
 Don’t miss out on this opportunity to explore a tool that bridges the gap between **complexity** and **interpretability** in AI.
