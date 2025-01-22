@@ -1,12 +1,12 @@
 import sympy as sp
 import math
 
-def calculate_Nu(Re, Pr):
-    Nu = 0.0349978389621261*math.sqrt(Pr**0.6667161*Re)
-    return float(Nu)
+def calculate_y(x):
+    y = 2.21949495614222*x**2 - 5.3670266836839*x + 3.21636591215306
+    return float(y)
 
 if __name__ == "__main__":
     # Test the function with example values
-    Re, Pr = [239696.96969696973, 3.941666666666667]  # Example values
-    result = calculate_Nu(Re, Pr)
-    print(f"Nu = {result}")
+    x = 0.0  # Example values
+    result = calculate_y(x)
+    print(f"y = {result}")

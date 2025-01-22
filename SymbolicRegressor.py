@@ -15,14 +15,17 @@ np.random.seed(42)
 # Clean pySR Temp Dir
 ########################################################################################################################
 temp_directory = "temp_pysr_files"
+
+if os.path.exists(temp_directory):
+    shutil.rmtree(temp_directory)
+
 if not os.path.exists(temp_directory):
     os.makedirs(temp_directory)
-shutil.rmtree(temp_directory)
 
 ########################################################################################################################
 # Load the dataset - Input Values
 ########################################################################################################################
-data = pd.read_excel("datasets/nusselt.xlsx")
+data = pd.read_excel("datasets/quadratic.xlsx")
 
 ########################################################################################################################
 # Cleaning column names
@@ -40,20 +43,19 @@ data.columns = (
 y = data.iloc[:, 0].values  # The first column is always the dependent variable
 X = data.iloc[:, 1:].values  # The other columns are the independent variables
 
-temp_directory = "temp_pysr_files"
-if not os.path.exists(temp_directory):
-    os.makedirs(temp_directory)
-
 ########################################################################################################################
 # Configure the PySR model
 ########################################################################################################################
 model = PySRRegressor(
     populations=10,
-    niterations=100,
+    niterations=200,
     unary_operators=["exp", "log", "sqrt"],  # Unary operators
     binary_operators=["+", "-", "*", "/", "^"],  # Binary operators
+    constraints={
+            "^": (-9, 9),  # Constraint the exponent between -9 and 9
+        },
     early_stop_condition=(
-        "stop_if(loss, complexity) = loss < 1e-1 && complexity < 10"
+        "stop_if(loss, complexity) = loss < 1e-2 && complexity < 10"
         # Stop early if we find a good and simple equation
     ),
     elementwise_loss="myloss(x, y) = sum(abs.(x .- y) ./ abs.(x)) ",  # MAPE
@@ -91,6 +93,7 @@ if not filtered_equations.empty:
     best_filtered_equation = filtered_equations.sort_values("loss").iloc[0]
     best_equation_sympy = sp.sympify(best_filtered_equation["equation"])  # Convert string to sympy equation
     print("Using filtered equation with the lowest loss and complexity:")
+    best_equation_index = best_filtered_equation.name
     print(best_equation_sympy)
 else:
     print("No equation satisfies the early stop condition.")
@@ -134,7 +137,10 @@ plt.close()
 ########################################################################################################################
 # Generate predicted values
 ########################################################################################################################
-y_pred = model.predict(X)
+if not filtered_equations.empty:
+    y_pred = model.predict(X, index=best_equation_index)
+else:
+    y_pred = model.predict(X)
 
 results_df = pd.DataFrame({
     "Real": y,
