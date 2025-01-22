@@ -25,7 +25,7 @@ Join us for an **interactive live session** where we'll dive deep into PySR and 
 ### 📅 Event Details:
 - **Date**: January 22, 2025
 - **Time**: 6:00 PM (GMT-3)
-- **Where**: Google Meets (with simultaneous YouTube streaming)
+- **Where**: [Watch Live on YouTube](https://youtube.com/live/aTKbIjpNVME?feature=share)
 
 ### Topics Covered:
 1. Introduction to Symbolic Regression and PySR.
