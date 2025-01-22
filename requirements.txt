@@ -1,0 +1,6 @@
+sympy~=1.13.1
+pandas~=2.2.2
+matplotlib~=3.8.4
+numpy~=1.26.4
+scikit-learn~=1.5.2
+pysr~=0.19.4
